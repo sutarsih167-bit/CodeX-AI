@@ -232,10 +232,10 @@ export default function App() {
           }
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: "Error: Gagal terhubung ke modul AI Core. Coba lagi dalam beberapa saat.",
+        content: `Error: ${error.message || "Gagal terhubung ke modul AI Core. Coba lagi dalam beberapa saat."}`,
         model: modelName
       }]);
     } finally {

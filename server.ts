@@ -89,14 +89,23 @@ app.delete("/api/keys/:id", (req, res) => {
   res.json({ success: true });
 });
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-  httpOptions: {
-    headers: {
-      "User-Agent": "aistudio-build",
-    },
-  },
-});
+let aiClient: GoogleGenAI | null = null;
+const getAiClient = () => {
+  if (!aiClient) {
+    if (!process.env.GEMINI_API_KEY) {
+      console.warn("GEMINI_API_KEY is not defined in environment variables. You must provide a custom API key from the frontend.");
+    }
+    aiClient = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY || "missing_key",
+      httpOptions: {
+        headers: {
+          "User-Agent": "aistudio-build",
+        },
+      },
+    });
+  }
+  return aiClient;
+};
 
 // System prompt set to be a "Programmer Language" and "Data Analysis" expert
 const SYSTEM_INSTRUCTION = `
@@ -146,7 +155,11 @@ app.post("/api/chat", async (req, res) => {
 
     const currentAi = customApiKey 
       ? new GoogleGenAI({ apiKey: customApiKey, httpOptions: { headers: { "User-Agent": "aistudio-build" } } }) 
-      : ai;
+      : getAiClient();
+
+    if (!customApiKey && !process.env.GEMINI_API_KEY) {
+      throw new Error("API Key tidak ditemukan. Silakan tambahkan Custom Gemini API Key di menu Configuration.");
+    }
 
     const chat = currentAi.chats.create({
       model: "gemini-2.5-flash",
