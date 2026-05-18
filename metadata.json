@@ -1,0 +1,8 @@
+{
+  "name": "CodeX AI",
+  "description": "AI cerdas untuk programmer dan analis data. Menganalisis kode, visualisasi data, dan solusi teknis dengan antarmuka elegan.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
