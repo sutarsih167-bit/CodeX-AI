@@ -245,7 +245,7 @@ export default function App() {
 
   if (isAppLoading) {
     return (
-      <div className="flex h-screen bg-[#111111] items-center justify-center flex-col font-sans">
+      <div className="flex h-[100dvh] w-full bg-[#111111] items-center justify-center flex-col font-sans">
         <motion.div
            initial={{ scale: 0.8, opacity: 0 }}
            animate={{ scale: 1, opacity: 1 }}
@@ -299,7 +299,7 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen bg-bg overflow-hidden font-sans">
+    <div className="flex h-[100dvh] w-full bg-bg overflow-hidden font-sans">
       <div className={cn(
         "fixed inset-0 bg-black/60 z-40 md:hidden transition-opacity duration-300",
         isSidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"

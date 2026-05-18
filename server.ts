@@ -1,10 +1,14 @@
 import express from "express";
 import path from "path";
-import { createServer as createViteServer } from "vite";
+import { fileURLToPath } from "url";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import fs from "fs";
 import crypto from "crypto";
+
+// For ES modules __dirname workaround
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -14,7 +18,9 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 // API Keys Storage (in-memory for simplicity + local file backup)
-const KEYS_FILE = path.join(process.cwd(), "api_keys.json");
+const KEYS_FILE = process.env.VERCEL 
+  ? path.join("/tmp", "api_keys.json")
+  : path.join(process.cwd(), "api_keys.json");
 let apiKeys: Array<{ id: string; name: string; key: string; createdAt: number }> = [];
 
 try {
@@ -190,6 +196,7 @@ app.post("/api/chat", async (req, res) => {
 
 async function startServer() {
   if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
