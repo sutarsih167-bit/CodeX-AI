@@ -9,6 +9,7 @@ interface ChatInputProps {
 export const AI_MODELS = [
   { id: "CodeX AI", image: "/console.jpg" },
   { id: "ChatGPT", image: "/ChatGPT.jpg" },
+  { id: "Claude", image: "/Claude.jpg" },
   { id: "Gemini", image: "/gemini.jpg" },
   { id: "Grok", image: "/grok.jpg" },
   { id: "DeepSeek", image: "/deepseek.jpg" }

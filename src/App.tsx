@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { ChatMessage } from './components/ChatMessage';
 import { ChatInput } from './components/ChatInput';
-import { Cpu, Terminal, ShieldAlert, Brain, Network, Zap, ShieldCheck, Database, Key, Copy, Plus, Check, Edit2, Trash2, MoreVertical, BarChart2, DollarSign, ChevronDown, FileText, X } from 'lucide-react';
+import { Cpu, Terminal, ShieldAlert, Brain, Network, Zap, ShieldCheck, Database, Key, Copy, Plus, Check, Edit2, Trash2, MoreVertical, BarChart2, DollarSign, ChevronDown, FileText, X, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
 
@@ -174,6 +174,10 @@ export default function App() {
       });
 
       const customApiKey = localStorage.getItem('customGeminiApiKey');
+      const openaiApiKey = localStorage.getItem('openaiApiKey');
+      const claudeApiKey = localStorage.getItem('claudeApiKey');
+      const xaiApiKey = localStorage.getItem('xaiApiKey');
+      const deepSeekApiKey = localStorage.getItem('deepSeekApiKey');
 
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -185,6 +189,10 @@ export default function App() {
           history: formattedHistory,
           modelName: modelName || 'CodeX AI',
           customApiKey: customApiKey || undefined,
+          openaiApiKey: openaiApiKey || undefined,
+          claudeApiKey: claudeApiKey || undefined,
+          xaiApiKey: xaiApiKey || undefined,
+          deepSeekApiKey: deepSeekApiKey || undefined,
           image: image ? { base64: image.base64, mimeType: image.mimeType } : undefined
         }),
       });
@@ -447,41 +455,100 @@ export default function App() {
                 Configuration
               </h2>
 
-              <div className="bg-surface border border-edge rounded-3xl p-6 sm:p-8 shadow-sm mb-6">
-                <div className="flex items-center gap-3 mb-6 border-b border-edge pb-4">
-                  <div className="p-2.5 bg-accent/10 rounded-xl">
-                    <Key className="text-accent" size={24} />
+                <div className="bg-surface border border-edge rounded-3xl p-6 sm:p-8 shadow-sm mb-6">
+                  <div className="flex items-center gap-3 mb-6 border-b border-edge pb-4">
+                    <div className="p-2.5 bg-accent/10 rounded-xl">
+                      <Key className="text-accent" size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-medium text-lg">API Keys Provider List</h3>
+                      <p className="text-zinc-400 text-sm mt-0.5">
+                        Sistem saat ini sudah menggunakan <strong>Internal System Key (Gemini)</strong> secara default. Anda <strong>tidak perlu</strong> mengisi API key di bawah ini kecuali jika ingin menggunakan key pribadi Anda sendiri.
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-white font-medium text-lg">Custom Gemini API Key</h3>
-                    <p className="text-zinc-400 text-sm mt-0.5">Bypass rate limits by using your own Gemini API key</p>
-                  </div>
-                </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-zinc-300 text-sm font-medium mb-2">API Key</label>
-                    <input
-                      type="password"
-                      value={localStorage.getItem('customGeminiApiKey') || ''}
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          localStorage.setItem('customGeminiApiKey', e.target.value);
-                        } else {
-                          localStorage.removeItem('customGeminiApiKey');
-                        }
-                        // Force a re-render to reflect changes
-                        setMessages([...messages]); 
-                      }}
-                      className="w-full bg-bg border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-accent focus:ring-1 focus:ring-accent focus:outline-hidden transition-all shadow-inner"
-                      placeholder="AIzaSy..."
-                    />
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-zinc-300 text-sm font-medium mb-2">Gemini API Key (Google)</label>
+                      <input
+                        type="password"
+                        value={localStorage.getItem('customGeminiApiKey') || ''}
+                        onChange={(e) => {
+                          if (e.target.value) localStorage.setItem('customGeminiApiKey', e.target.value);
+                          else localStorage.removeItem('customGeminiApiKey');
+                          setMessages([...messages]); 
+                        }}
+                        className="w-full bg-bg border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-accent focus:ring-1 focus:ring-accent focus:outline-hidden transition-all shadow-inner"
+                        placeholder="AIzaSy..."
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-zinc-300 text-sm font-medium mb-2">OpenAI API Key (ChatGPT)</label>
+                      <input
+                        type="password"
+                        value={localStorage.getItem('openaiApiKey') || ''}
+                        onChange={(e) => {
+                          if (e.target.value) localStorage.setItem('openaiApiKey', e.target.value);
+                          else localStorage.removeItem('openaiApiKey');
+                          setMessages([...messages]); 
+                        }}
+                        className="w-full bg-bg border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-accent focus:ring-1 focus:ring-accent focus:outline-hidden transition-all shadow-inner"
+                        placeholder="sk-..."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-zinc-300 text-sm font-medium mb-2">Claude API Key (Anthropic)</label>
+                      <input
+                        type="password"
+                        value={localStorage.getItem('claudeApiKey') || ''}
+                        onChange={(e) => {
+                          if (e.target.value) localStorage.setItem('claudeApiKey', e.target.value);
+                          else localStorage.removeItem('claudeApiKey');
+                          setMessages([...messages]); 
+                        }}
+                        className="w-full bg-bg border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-accent focus:ring-1 focus:ring-accent focus:outline-hidden transition-all shadow-inner"
+                        placeholder="sk-ant-..."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-zinc-300 text-sm font-medium mb-2">xAI API Key (Grok)</label>
+                      <input
+                        type="password"
+                        value={localStorage.getItem('xaiApiKey') || ''}
+                        onChange={(e) => {
+                          if (e.target.value) localStorage.setItem('xaiApiKey', e.target.value);
+                          else localStorage.removeItem('xaiApiKey');
+                          setMessages([...messages]); 
+                        }}
+                        className="w-full bg-bg border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-accent focus:ring-1 focus:ring-accent focus:outline-hidden transition-all shadow-inner"
+                        placeholder="xai-..."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-zinc-300 text-sm font-medium mb-2">DeepSeek API Key (DeepSeek)</label>
+                      <input
+                        type="password"
+                        value={localStorage.getItem('deepSeekApiKey') || ''}
+                        onChange={(e) => {
+                          if (e.target.value) localStorage.setItem('deepSeekApiKey', e.target.value);
+                          else localStorage.removeItem('deepSeekApiKey');
+                          setMessages([...messages]); 
+                        }}
+                        className="w-full bg-bg border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-accent focus:ring-1 focus:ring-accent focus:outline-hidden transition-all shadow-inner"
+                        placeholder="sk-..."
+                      />
+                    </div>
+                    
                     <p className="text-xs text-zinc-500 mt-2">
-                      Your key is securely stored in your browser's local storage and only sent to the server for requests. If left empty, the default server API key will be used (which may have limits).
+                      Keys are stored locally in your browser and used to securely connect to each respective AI provider.
                     </p>
                   </div>
                 </div>
-              </div>
             </div>
           </div>
         ) : activeTab === 'Get API Key' ? (

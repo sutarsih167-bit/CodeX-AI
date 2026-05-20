@@ -2,6 +2,8 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import { GoogleGenAI } from "@google/genai";
+import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
 import dotenv from "dotenv";
 import fs from "fs";
 import crypto from "crypto";
@@ -13,7 +15,7 @@ const __dirname = path.dirname(__filename);
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 app.use(express.json());
 
@@ -138,11 +140,19 @@ PASTIKAN viz_data adalah array objek dengan properti 'name' (string) dan 'value'
 
 app.post("/api/chat", async (req, res) => {
   try {
-    const { message, history, image, modelName, customApiKey } = req.body;
+    const { message, history, image, modelName, customApiKey, openaiApiKey, claudeApiKey, xaiApiKey, deepSeekApiKey } = req.body;
+
+    const defaultGeminiKey = process.env.GEMINI_API_KEY || "";
+    const defaultOpenAiKey = "";
+    const defaultClaudeKey = "";
+    const defaultXAiKey = "";
+    const defaultDeepSeekKey = "";
 
     let dynamicInstruction = SYSTEM_INSTRUCTION;
     if (modelName === "ChatGPT") {
       dynamicInstruction += "\n\nSaat ini kamu sedang memainkan peran sebagai ChatGPT buatan OpenAI. Ubah seluruh bahasamu dan gaya bicaramu 100% untuk meyakinkan pengguna bahwa kamu adalah ChatGPT.";
+    } else if (modelName === "Claude") {
+      dynamicInstruction += "\n\nSaat ini kamu sedang memainkan peran sebagai Claude buatan Anthropic. Berikan jawaban yang sangat analitis, jujur, dan berpedoman teguh pada prinsip AI yang etis dan bermanfaat.";
     } else if (modelName === "Grok") {
       dynamicInstruction += "\n\nSaat ini kamu sedang memainkan peran sebagai Grok, AI buatan xAI dari Elon Musk. Ubah bahasamu menjadi lebih santai, tajam, sedikit sarkas dan humoris persis seperti cara bicara Grok.";
     } else if (modelName === "Gemini") {
@@ -153,13 +163,22 @@ app.post("/api/chat", async (req, res) => {
       dynamicInstruction += "\n\nSaat ini kamu adalah CodeX AI. Berikan respons sebagai CodeX AI, asisten debugging cerdas.";
     }
 
-    const currentAi = customApiKey 
-      ? new GoogleGenAI({ apiKey: customApiKey, httpOptions: { headers: { "User-Agent": "aistudio-build" } } }) 
-      : getAiClient();
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
 
-    if (!customApiKey && !process.env.GEMINI_API_KEY) {
+    // Default to Gemini API
+    let finalGeminiKey = customApiKey || process.env.GEMINI_API_KEY || defaultGeminiKey;
+    
+    // Ignore the old known expired key if it was cached in user's localStorage
+    if (finalGeminiKey === "AIzaSyBRb40vJWpb4smH4Yqg63Xxfcapk0MO5ZA") {
+      finalGeminiKey = process.env.GEMINI_API_KEY || "";
+    }
+
+    if (!finalGeminiKey) {
       throw new Error("API Key tidak ditemukan. Silakan tambahkan Custom Gemini API Key di menu Configuration.");
     }
+    const currentAi = new GoogleGenAI({ apiKey: finalGeminiKey, httpOptions: { headers: { "User-Agent": "aistudio-build" } } });
 
     const chat = currentAi.chats.create({
       model: "gemini-2.5-flash",
@@ -190,10 +209,6 @@ app.post("/api/chat", async (req, res) => {
 
     const resultStream = await chat.sendMessageStream({ message: finalMessage });
 
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-
     for await (const chunk of resultStream) {
       if (chunk.text) {
         res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
@@ -202,8 +217,27 @@ app.post("/api/chat", async (req, res) => {
     res.write('data: [DONE]\n\n');
     res.end();
   } catch (error: any) {
-    console.error("Gemini Error:", error);
-    res.status(500).json({ error: error.message || "Terjadi kesalahan pada server AI." });
+    console.error("AI Error:", error);
+    
+    let errorMessage = error.message || "Terjadi kesalahan pada server AI.";
+    
+    if (errorMessage.includes("402") || errorMessage.includes("Insufficient Balance") || error.status === 402) {
+      errorMessage = "Saldo API (Credits) Anda tidak mencukupi atau telah habis. Silakan isi ulang (top-up) saldo di dashboard provider AI terkait.";
+    } else if (errorMessage.includes("503") || errorMessage.includes("experiencing high demand") || error.status === 503 || errorMessage.includes("UNAVAILABLE")) {
+      errorMessage = "Server AI sedang mengalami permintaan tinggi (High Demand/Overloaded) atau sementara tidak tersedia. Silakan coba lagi dalam beberapa saat.";
+    } else if (errorMessage.toLowerCase().includes("API key expired") || errorMessage.toLowerCase().includes("expired")) {
+      errorMessage = "API Key telah kedaluwarsa (Expired). Silakan perbarui API Key Anda di menu Configuration.";
+    } else if (errorMessage.toLowerCase().includes("401") || errorMessage.toLowerCase().includes("invalid api key") || errorMessage.toLowerCase().includes("incorrect api key") || errorMessage.toLowerCase().includes("api key not valid")) {
+      errorMessage = "API Key tidak valid atau salah. Silakan periksa kembali API Key yang Anda masukkan di menu Configuration.";
+    }
+
+    if (!res.headersSent) {
+      res.status(500).json({ error: errorMessage });
+    } else {
+      res.write(`data: ${JSON.stringify({ text: `\n\n**Error:** ${errorMessage}` })}\n\n`);
+      res.write('data: [DONE]\n\n');
+      res.end();
+    }
   }
 });
 
